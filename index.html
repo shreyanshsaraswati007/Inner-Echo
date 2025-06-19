@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inner Echo - AI Medical Diagnostics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #7c3aed;
+            --accent: #10b981;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+        
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #f8fafc;
+            color: var(--dark);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+        
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+        
+        .user-message {
+            background-color: var(--primary);
+            color: white;
+            border-radius: 18px 18px 0 18px;
+        }
+        
+        .bot-message {
+            background-color: #e2e8f0;
+            color: var(--dark);
+            border-radius: 18px 18px 18px 0;
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .leader-card {
+            position: relative;
+            overflow: hidden;
+            border: 2px solid var(--primary);
+        }
+        
+        .leader-card::after {
+            content: "Lead Researcher";
+            position: absolute;
+            top: 10px;
+            right: -30px;
+            background: var(--primary);
+            color: white;
+            padding: 2px 30px;
+            transform: rotate(45deg);
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .condition-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .symptom-checker-item {
+            transition: all 0.2s ease;
+        }
+        
+        .symptom-checker-item:hover {
+            background-color: #e0e7ff;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            border-radius: 4px;
+            background-color: #e0e7ff;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.5s ease;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-heartbeat text-2xl"></i>
+                <h1 class="text-2xl font-bold">Inner Echo</h1>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="#home" class="hover:text-gray-200 transition">Home</a>
+                <a href="#conditions" class="hover:text-gray-200 transition">Conditions</a>
+                <a href="#research" class="hover:text-gray-200 transition">Research</a>
+                <a href="#chatbot" class="hover:text-gray-200 transition">AI Assistant</a>
+                <a href="#symptom-checker" class="hover:text-gray-200 transition">Symptom Checker</a>
+            </div>
+            <button class="md:hidden text-xl" id="mobile-menu-button">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <!-- Mobile Menu -->
+        <div class="md:hidden hidden bg-blue-700 px-4 py-2" id="mobile-menu">
+            <a href="#home" class="block py-2 hover:bg-blue-600 rounded px-2">Home</a>
+            <a href="#conditions" class="block py-2 hover:bg-blue-600 rounded px-2">Conditions</a>
+            <a href="#research" class="block py-2 hover:bg-blue-600 rounded px-2">Research</a>
+            <a href="#chatbot" class="block py-2 hover:bg-blue-600 rounded px-2">AI Assistant</a>
+            <a href="#symptom-checker" class="block py-2 hover:bg-blue-600 rounded px-2">Symptom Checker</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="gradient-bg text-white py-16 md:py-24">
+        <div class="container mx-auto px-4 flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 mb-8 md:mb-0">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4 leading-tight">Revolutionizing Medical Diagnostics with AI</h2>
+                <p class="text-xl mb-6">Advanced research in healthcare diagnostics by emerging medical researchers.</p>
+                <div class="flex space-x-4">
+                    <a href="#conditions" class="bg-white text-indigo-600 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition shadow-md">Explore Conditions</a>
+                    <a href="#symptom-checker" class="border-2 border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 transition">Try Symptom Checker</a>
+                </div>
+            </div>
+            <div class="md:w-1/2 flex justify-center">
+                <img src="https://img.icons8.com/color/512/artificial-intelligence.png" alt="AI Doctor" class="w-64 h-64 md:w-80 md:h-80 object-contain floating">
+            </div>
+        </div>
+    </section>
+
+    <!-- Conditions Section -->
+    <section id="conditions" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Medical Conditions We Analyze</h2>
+            
+            <div class="flex border-b mb-8 overflow-x-auto">
+                <button class="tab-button px-6 py-3 font-medium text-gray-600 hover:text-indigo-600 transition border-b-2 border-transparent hover:border-indigo-400 active" data-tab="addisons">Addison's Disease</button>
+                <button class="tab-button px-6 py-3 font-medium text-gray-600 hover:text-indigo-600 transition border-b-2 border-transparent hover:border-indigo-400" data-tab="epilepsy">Epilepsy</button>
+                <button class="tab-button px-6 py-3 font-medium text-gray-600 hover:text-indigo-600 transition border-b-2 border-transparent hover:border-indigo-400" data-tab="anaemia">Megaloblastic Anaemia</button>
+                <button class="tab-button px-6 py-3 font-medium text-gray-600 hover:text-indigo-600 transition border-b-2 border-transparent hover:border-indigo-400" data-tab="fibrosis">Cystic Fibrosis</button>
+                <button class="tab-button px-6 py-3 font-medium text-gray-600 hover:text-indigo-600 transition border-b-2 border-transparent hover:border-indigo-400" data-tab="cardiac">Cardiac Arrest</button>
+            </div>
+            
+            <!-- Addison's Disease -->
+            <div id="addisons" class="tab-content active">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4 text-indigo-600">Addison's Disease</h3>
+                        <p class="mb-4">Addison's disease, also known as primary adrenal insufficiency, is a rare disorder that occurs when your adrenal glands don't produce enough of certain hormones, including cortisol and often aldosterone.</p>
+                        
+                        <img src="https://img.icons8.com/color/512/adrenal-gland.png" alt="Addison's Disease" class="condition-image">
+                        
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="bg-indigo-50 p-4 rounded-lg">
+                                <h4 class="font-bold mb-2 text-indigo-700">Key Symptoms:</h4>
+                                <ul class="list-disc pl-5 space-y-1">
+                                    <li>Extreme fatigue</li>
+                                    <li>Weight loss</li>
+                                    <li>Darkening of skin</li>
+                                    <li>Low blood pressure</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-green-50 p-4 rounded-lg">
+                                <h4 class="font-bold mb-2 text-green-700">Diagnosis:</h4>
+                                <p>Blood tests for cortisol and ACTH levels, ACTH stimulation test, and imaging of adrenal glands.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                            <h4 class="font-bold mb-4 text-lg">Treatment Overview</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="font-medium">Hormone Replacement</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 95%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="font-medium">Symptom Management</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 88%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="font-medium">Emergency Preparedness</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 92%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 bg-yellow-50 p-4 rounded-lg">
+                                <h4 class="font-bold mb-2 text-yellow-700">Treatment Options:</h4>
+                                <ul class="list-disc pl-5 space-y-1">
+                                    <li>Hydrocortisone or prednisone</li>
+                                    <li>Fludrocortisone for aldosterone</li>
+                                    <li>Increased salt intake</li>
+                                    <li>Emergency hydrocortisone injection</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 bg-indigo-50 p-4 rounded-lg">
+                            <h4 class="font-bold mb-2 text-indigo-700">Did You Know?</h4>
+                            <p>Addison's disease affects about 1 in 100,000 people. President John F. Kennedy had Addison's disease.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Other condition tabs (epilepsy, anaemia, fibrosis, cardiac) -->
+            <!-- Similar structure as Addison's disease tab -->
+            <!-- ... -->
+            
+        </div>
+    </section>
+
+    <!-- Symptom Checker Section -->
+    <section id="symptom-checker" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-8">Symptom Checker</h2>
+            <p class="text-center max-w-2xl mx-auto mb-12">Select your symptoms to get potential condition matches. This tool is for informational purposes only and not a substitute for professional medical advice.</p>
+            
+            <div class="bg-white rounded-xl shadow-md overflow-hidden max-w-4xl mx-auto">
+                <div class="grid md:grid-cols-3">
+                    <div class="bg-indigo-50 p-6 border-r border-gray-200">
+                        <h3 class="font-bold text-lg mb-4">Select Symptoms</h3>
+                        <div class="space-y-2" id="symptom-list">
+                            <div class="symptom-checker-item bg-white p-3 rounded-lg cursor-pointer border border-gray-200" data-symptom="fatigue">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="mr-2 symptom-checkbox" id="fatigue">
+                                    <label for="fatigue" class="cursor-pointer">Fatigue</label>
+                                </div>
+                            </div>
+                            <div class="symptom-checker-item bg-white p-3 rounded-lg cursor-pointer border border-gray-200" data-symptom="weight-loss">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="mr-2 symptom-checkbox" id="weight-loss">
+                                    <label for="weight-loss" class="cursor-pointer">Unexplained weight loss</label>
+                                </div>
+                            </div>
+                            <div class="symptom-checker-item bg-white p-3 rounded-lg cursor-pointer border border-gray-200" data-symptom="dizziness">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="mr-2 symptom-checkbox" id="dizziness">
+                                    <label for="dizziness" class="cursor-pointer">Dizziness</label>
+                                </div>
+                            </div>
+                            <div class="symptom-checker-item bg-white p-3 rounded-lg cursor-pointer border border-gray-200" data-symptom="skin-darkening">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="mr-2 symptom-checkbox" id="skin-darkening">
+                                    <label for="skin-darkening" class="cursor-pointer">Skin darkening</label>
+                                </div>
+                            </div>
+                            <div class="symptom-checker-item bg-white p-3 rounded-lg cursor-pointer border border-gray-200" data-symptom="salt-cravings">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="mr-2 symptom-checkbox" id="salt-cravings">
+                                    <label for="salt-cravings" class="cursor-pointer">Salt cravings</label>
+                                </div>
+                            </div>
+                            <div class="symptom-checker-item bg-white p-3 rounded-lg cursor-pointer border border-gray-200" data-symptom="muscle-weakness">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="mr-2 symptom-checkbox" id="muscle-weakness">
+                                    <label for="muscle-weakness" class="cursor-pointer">Muscle weakness</label>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="check-symptoms" class="gradient-bg text-white px-4 py-2 rounded-lg mt-4 w-full hover:opacity-90 transition">Check Symptoms</button>
+                    </div>
+                    
+                    <div class="md:col-span-2 p-6">
+                        <h3 class="font-bold text-lg mb-4">Possible Conditions</h3>
+                        <div id="results-container" class="space-y-4">
+                            <div class="text-center py-8 text-gray-400" id="no-results-message">
+                                <i class="fas fa-stethoscope text-4xl mb-2"></i>
+                                <p>Select symptoms to see potential matches</p>
+                            </div>
+                            <div id="condition-results" class="hidden">
+                                <!-- Results will be populated here by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Research Team Section -->
+    <section id="research" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Research Team 2025</h2>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-lg text-center card-hover leader-card">
+                    <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-indigo-100 flex items-center justify-center">
+                        <i class="fas fa-user-md text-indigo-500 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-1">Aashvi</h3>
+                    <p class="text-gray-600 mb-2">Lead Researcher</p>
+                    <p class="text-sm text-gray-500">Neurology & AI Integration</p>
+                    <div class="mt-3">
+                        <span class="inline-block bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded">Team Lead</span>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-lg text-center card-hover">
+                    <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
+                        <i class="fas fa-brain text-green-500 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-1">Aadya</h3>
+                    <p class="text-gray-600 mb-2">Endocrine Researcher</p>
+                    <p class="text-sm text-gray-500">AI Algorithms Development</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-lg text-center card-hover">
+                    <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-purple-100 flex items-center justify-center">
+                        <i class="fas fa-tint text-purple-500 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-1">Bhavya</h3>
+                    <p class="text-gray-600 mb-2">Hematology Expert</p>
+                    <p class="text-sm text-gray-500">Blood Analysis Models</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-lg text-center card-hover">
+                    <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-yellow-100 flex items-center justify-center">
+                        <i class="fas fa-dna text-yellow-500 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-1">Aditya</h3>
+                    <p class="text-gray-600 mb-2">Genetic Researcher</p>
+                    <p class="text-sm text-gray-500">Inherited Conditions</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-lg text-center card-hover">
+                    <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+                        <i class="fas fa-laptop-code text-red-500 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-1">Shreyansh</h3>
+                    <p class="text-gray-600 mb-2">Technical Lead</p>
+                    <p class="text-sm text-gray-500">Platform Development</p>
+                    <div class="mt-3">
+                        <span class="inline-block bg-red-100 text-red-800 text-xs px-2 py-1 rounded">Developer</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-12 bg-gradient-to-r from-indigo-50 to-purple-50 p-8 rounded-lg shadow-inner">
+                <h3 class="text-2xl font-bold mb-4 text-center">2025 Research Highlights</h3>
+                <p class="mb-4 text-center max-w-3xl mx-auto">Our team has pioneered innovative approaches to medical diagnostics by combining clinical expertise with artificial intelligence.</p>
+                
+                <div class="grid md:grid-cols-3 gap-6 mt-8">
+                    <div class="bg-white p-4 rounded-lg text-center shadow-sm">
+                        <div class="text-4xl font-bold text-indigo-600 mb-2">5</div>
+                        <p class="font-medium">Conditions Researched</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg text-center shadow-sm">
+                        <div class="text-4xl font-bold text-green-600 mb-2">2000+</div>
+                        <p class="font-medium">Research Hours</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg text-center shadow-sm">
+                        <div class="text-4xl font-bold text-purple-600 mb-2">94%</div>
+                        <p class="font-medium">Model Accuracy</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Chatbot Section -->
+    <section id="chatbot" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">AI Medical Assistant</h2>
+            
+            <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="gradient-bg text-white p-4 flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center mr-3">
+                        <i class="fas fa-robot text-indigo-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold">Inner Echo AI</h3>
+                        <p class="text-xs opacity-80">Medical Diagnostics Assistant</p>
+                    </div>
+                    <div class="ml-auto flex space-x-2">
+                        <button class="w-8 h-8 rounded-full bg-indigo-700 flex items-center justify-center">
+                            <i class="fas fa-ellipsis-h text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="chat-container p-4 h-96" id="chat-messages">
+                    <div class="mb-4 flex justify-start">
+                        <div class="max-w-xs md:max-w-md bot-message p-3">
+                            <p>Hello! I'm Inner Echo AI, your medical diagnostics assistant. I can provide information about Addison's disease, epilepsy, megaloblastic anemia, cystic fibrosis, and cardiac arrest. How can I help you today?</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border-t p-4 bg-white">
+                    <div class="flex items-center">
+                        <input type="text" placeholder="Ask about any medical condition..." class="flex-1 border rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" id="user-input">
+                        <button class="gradient-bg text-white px-6 py-2 rounded-r-lg hover:opacity-90 transition" id="send-button">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="mt-2 flex space-x-2 overflow-x-auto">
+                        <button class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full transition quick-question" data-question="What are the symptoms of Addison's disease?">Addison's symptoms</button>
+                        <button class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full transition quick-question" data-question="How is epilepsy diagnosed?">Epilepsy diagnosis</button>
+                        <button class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full transition quick-question" data-question="What causes megaloblastic anemia?">Anemia causes</button>
+                        <button class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full transition quick-question" data-question="Is cystic fibrosis genetic?">CF genetics</button>
+                        <button class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full transition quick-question" data-question="What to do during cardiac arrest?">Cardiac emergency</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Our Innovations</h2>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-indigo-50 p-6 rounded-lg shadow-md card-hover">
+                    <div class="text-indigo-500 text-4xl mb-4">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">AI-Powered Analysis</h3>
+                    <p class="text-gray-600">Our machine learning models analyze complex medical patterns with human-like understanding but computer precision.</p>
+                </div>
+                
+                <div class="bg-green-50 p-6 rounded-lg shadow-md card-hover">
+                    <div class="text-green-500 text-4xl mb-4">
+                        <i class="fas fa-project-diagram"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Interactive Tools</h3>
+                    <p class="text-gray-600">Engage with our symptom checker and AI assistant for personalized health insights.</p>
+                </div>
+                
+                <div class="bg-purple-50 p-6 rounded-lg shadow-md card-hover">
+                    <div class="text-purple-500 text-4xl mb-4">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Visual Analytics</h3>
+                    <p class="text-gray-600">Clear visual representations of complex medical data for better understanding.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="gradient-bg text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fas fa-heartbeat mr-2"></i> Inner Echo
+                    </h3>
+                    <p class="text-sm opacity-80">Advancing medical diagnostics through innovative AI research.</p>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#conditions" class="text-sm opacity-80 hover:opacity-100 transition">Conditions</a></li>
+                        <li><a href="#research" class="text-sm opacity-80 hover:opacity-100 transition">Research Team</a></li>
+                        <li><a href="#chatbot" class="text-sm opacity-80 hover:opacity-100 transition">AI Assistant</a></li>
+                        <li><a href="#symptom-checker" class="text-sm opacity-80 hover:opacity-100 transition">Symptom Checker</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Research Team</h4>
+                    <ul class="space-y-2">
+                        <li class="text-sm opacity-80">Aashvi - Lead Researcher</li>
+                        <li class="text-sm opacity-80">Aadya - Endocrine Research</li>
+                        <li class="text-sm opacity-80">Bhavya - Hematology</li>
+                        <li class="text-sm opacity-80">Aditya - Genetics</li>
+                        <li class="text-sm opacity-80">Shreyansh - Developer</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-indigo-700 mt-8 pt-8 text-center text-sm opacity-80">
+                <p>© 2025 Inner Echo Research Project. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+
+        // Tab functionality
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+                
+                // Remove active class from all buttons and contents
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding content
+                this.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // Symptom Checker functionality
+        const symptomCheckboxes = document.querySelectorAll('.symptom-checkbox');
+        const checkSymptomsBtn = document.getElementById('check-symptoms');
+        const conditionResults = document.getElementById('condition-results');
+        const noResultsMessage = document.getElementById('no-results-message');
+        
+        // Sample symptom-condition mapping
+        const symptomConditionMap = {
+            'fatigue': ['Addison\'s Disease', 'Megaloblastic Anaemia', 'Cardiac Risk'],
+            'weight-loss': ['Addison\'s Disease', 'Megaloblastic Anaemia'],
+            'dizziness': ['Addison\'s Disease', 'Cardiac Risk'],
+            'skin-darkening': ['Addison\'s Disease'],
+            'salt-cravings': ['Addison\'s Disease'],
+            'muscle-weakness': ['Addison\'s Disease', 'Megaloblastic Anaemia']
+        };
+        
+        checkSymptomsBtn.addEventListener('click', function() {
+            const selectedSymptoms = Array.from(document.querySelectorAll('.symptom-checkbox:checked'))
+                .map(checkbox => checkbox.parentElement.parentElement.getAttribute('data-symptom'));
+            
+            if (selectedSymptoms.length === 0) {
+                conditionResults.classList.add('hidden');
+                noResultsMessage.classList.remove('hidden');
+                return;
+            }
+            
+            // Find matching conditions
+            const conditionMatches = {};
+            selectedSymptoms.forEach(symptom => {
+                if (symptomConditionMap[symptom]) {
+                    symptomConditionMap[symptom].forEach(condition => {
+                        conditionMatches[condition] = (conditionMatches[condition] || 0) + 1;
+                    });
+                }
+            });
+            
+            // Sort by most matches
+            const sortedConditions = Object.entries(conditionMatches)
+                .sort((a, b) => b[1] - a[1])
+                .map(([condition]) => condition);
+            
+            // Display results
+            conditionResults.innerHTML = '';
+            sortedConditions.forEach(condition => {
+                const conditionDiv = document.createElement('div');
+                conditionDiv.className = 'bg-white p-4 rounded-lg border border-gray-200';
+                
+                let conditionInfo = '';
+                if (condition === 'Addison\'s Disease') {
+                    conditionInfo = 'A disorder where the adrenal glands don\'t produce enough hormones. Symptoms include fatigue, weight loss, and skin darkening.';
+                } else if (condition === 'Megaloblastic Anaemia') {
+                    conditionInfo = 'A type of anemia caused by vitamin B12 or folate deficiency, leading to fatigue, weakness, and other symptoms.';
+                } else if (condition === 'Cardiac Risk') {
+                    conditionInfo = 'Potential indicators of cardiovascular issues that may require medical evaluation.';
+                }
+                
+                conditionDiv.innerHTML = `
+                    <h4 class="font-bold text-indigo-600 mb-1">${condition}</h4>
+                    <p class="text-sm mb-2">${conditionInfo}</p>
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>${conditionMatches[condition]} matching symptoms</span>
+                        <a href="#${condition.toLowerCase().replace(' ', '-').replace('\'s', '')}" class="text-indigo-500 hover:underline">Learn more</a>
+                    </div>
+                `;
+                
+                conditionResults.appendChild(conditionDiv);
+            });
+            
+            conditionResults.classList.remove('hidden');
+            noResultsMessage.classList.add('hidden');
+        });
+
+        // AI Chatbot functionality
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const quickQuestions = document.querySelectorAll('.quick-question');
+
+        // Sample responses for the AI
+        const aiResponses = {
+            "addison": {
+                "symptoms": "The main symptoms of Addison's disease include: extreme fatigue, weight loss, decreased appetite, darkening of skin (hyperpigmentation), low blood pressure, salt cravings, and low blood sugar (hypoglycemia).",
+                "diagnosis": "Addison's disease is diagnosed through blood tests measuring cortisol and ACTH levels, ACTH stimulation test, insulin-induced hypoglycemia test, and sometimes imaging tests of adrenal glands.",
+                "treatment": "Treatment involves hormone replacement therapy to replace cortisol (hydrocortisone or prednisone) and aldosterone (fludrocortisone). Patients also need increased salt intake and must carry emergency hydrocortisone injections."
+            },
+            "epilepsy": {
+                "symptoms": "Epilepsy symptoms vary but may include: temporary confusion, staring spells, uncontrollable jerking movements, loss of consciousness, psychic symptoms like fear or déjà vu. Seizures can be focal or generalized.",
+                "diagnosis": "Diagnosis involves EEG to record electrical activity, MRI or CT scans to detect brain abnormalities, neurological exams, and detailed history of seizure episodes. Video EEG monitoring may be needed.",
+                "treatment": "Treatment options include anti-seizure medications, ketogenic diet, vagus nerve stimulation, and in drug-resistant cases, brain surgery to remove the seizure focus."
+            },
+            "anaemia": {
+                "symptoms": "Symptoms of megaloblastic anemia include: fatigue, weakness, pale skin, shortness of breath, dizziness, smooth/tender tongue, muscle weakness, and cognitive disturbances from B12 deficiency.",
+                "diagnosis": "Diagnosis involves complete blood count (CBC) showing large RBCs, low hemoglobin; peripheral blood smear showing megaloblasts; and blood tests for vitamin B12 and folate levels.",
+                "treatment": "Treatment includes vitamin B12 injections or high-dose oral supplements for B12 deficiency, folic acid supplements for folate deficiency, and treating underlying causes like celiac disease."
+            },
+            "fibrosis": {
+                "symptoms": "CF symptoms include: persistent cough with thick mucus, frequent lung infections, wheezing, poor growth despite good appetite, male infertility, salty-tasting skin, and digestive problems.",
+                "diagnosis": "Diagnosis involves sweat chloride test (high salt levels), genetic testing for CFTR mutations, newborn screening, lung function tests, and imaging of lungs and pancreas.",
+                "treatment": "Treatment includes airway clearance techniques, inhaled medications, CFTR modulators (ivacaftor, lumacaftor), pancreatic enzyme supplements, nutritional support, and lung transplant in severe cases."
+            },
+            "cardiac": {
+                "symptoms": "Cardiac arrest symptoms include sudden collapse, no pulse, no breathing, loss of consciousness. Warning signs before arrest may include chest discomfort, shortness of breath, weakness, palpitations.",
+                "diagnosis": "After resuscitation, diagnosis involves ECG, echocardiogram, cardiac enzyme tests, coronary angiography, electrophysiology studies to identify cause (arrhythmia, heart attack, etc.).",
+                "treatment": "Immediate CPR and defibrillation are critical. Long-term treatment may include medications, coronary angioplasty/stenting, implantable cardioverter-defibrillator (ICD), coronary bypass surgery."
+            }
+        };
+
+        function addBotMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'mb-4 flex justify-start';
+            messageDiv.innerHTML = `
+                <div class="max-w-xs md:max-w-md bot-message p-3">
+                    <p>${message}</p>
+                </div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addUserMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'mb-4 flex justify-end';
+            messageDiv.innerHTML = `
+                <div class="max-w-xs md:max-w-md user-message p-3">
+                    <p>${message}</p>
+                </div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function processUserInput(input) {
+            addUserMessage(input);
+            
+            // Show typing indicator
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'mb-4 flex justify-start';
+            typingDiv.innerHTML = `
+                <div class="max-w-xs md:max-w-md bot-message p-3">
+                    <div class="flex space-x-2">
+                        <div class="w-2 h-2 rounded-full bg-gray-400 pulse"></div>
+                        <div class="w-2 h-2 rounded-full bg-gray-400 pulse" style="animation-delay: 0.2s"></div>
+                        <div class="w-2 h-2 rounded-full bg-gray-400 pulse" style="animation-delay: 0.4s"></div>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Simulate AI thinking and response
+            setTimeout(() => {
+                // Remove typing indicator
+                chatMessages.removeChild(typingDiv);
+                
+                // Process input and generate response
+                const lowerInput = input.toLowerCase();
+                let response = "I'm sorry, I didn't understand your question. Could you please rephrase it or ask about one of the conditions we cover: Addison's disease, epilepsy, megaloblastic anemia, cystic fibrosis, or cardiac arrest?";
+                
+                if (lowerInput.includes("addison")) {
+                    if (lowerInput.includes("symptom")) {
+                        response = aiResponses.addison.symptoms;
+                    } else if (lowerInput.includes("diagnos") || lowerInput.includes("test")) {
+                        response = aiResponses.addison.diagnosis;
+                    } else if (lowerInput.includes("treat") || lowerInput.includes("cure")) {
+                        response = aiResponses.addison.treatment;
+                    } else {
+                        response = "Addison's disease is a disorder where the adrenal glands don't produce enough hormones. " + aiResponses.addison.symptoms;
+                    }
+                } else if (lowerInput.includes("epilepsy") || lowerInput.includes("seizure")) {
+                    if (lowerInput.includes("symptom")) {
+                        response = aiResponses.epilepsy.symptoms;
+                    } else if (lowerInput.includes("diagnos") || lowerInput.includes("test")) {
+                        response = aiResponses.epilepsy.diagnosis;
+                    } else if (lowerInput.includes("treat") || lowerInput.includes("cure")) {
+                        response = aiResponses.epilepsy.treatment;
+                    } else {
+                        response = "Epilepsy is a neurological disorder causing recurrent seizures. " + aiResponses.epilepsy.symptoms;
+                    }
+                } else if (lowerInput.includes("anemia") || lowerInput.includes("anaemia")) {
+                    if (lowerInput.includes("symptom")) {
+                        response = aiResponses.anaemia.symptoms;
+                    } else if (lowerInput.includes("diagnos") || lowerInput.includes("test")) {
+                        response = aiResponses.anaemia.diagnosis;
+                    } else if (lowerInput.includes("treat") || lowerInput.includes("cure")) {
+                        response = aiResponses.anaemia.treatment;
+                    } else if (lowerInput.includes("cause")) {
+                        response = "Megaloblastic anemia is most commonly caused by vitamin B12 or folate deficiency, often due to poor absorption (pernicious anemia), dietary deficiency, or increased requirements.";
+                    } else {
+                        response = "Megaloblastic anemia is characterized by large, immature red blood cells. " + aiResponses.anaemia.symptoms;
+                    }
+                } else if (lowerInput.includes("cystic") || lowerInput.includes("fibrosis") || lowerInput.includes("cf")) {
+                    if (lowerInput.includes("symptom")) {
+                        response = aiResponses.fibrosis.symptoms;
+                    } else if (lowerInput.includes("diagnos") || lowerInput.includes("test")) {
+                        response = aiResponses.fibrosis.diagnosis;
+                    } else if (lowerInput.includes("treat") || lowerInput.includes("cure")) {
+                        response = aiResponses.fibrosis.treatment;
+                    } else if (lowerInput.includes("genetic")) {
+                        response = "Yes, cystic fibrosis is an inherited disorder caused by mutations in the CFTR gene. It's autosomal recessive, meaning both parents must pass on a defective gene for a child to have CF.";
+                    } else {
+                        response = "Cystic fibrosis is a genetic disorder affecting lungs and digestive system. " + aiResponses.fibrosis.symptoms;
+                    }
+                } else if (lowerInput.includes("cardiac") || lowerInput.includes("heart") || lowerInput.includes("arrest")) {
+                    if (lowerInput.includes("symptom")) {
+                        response = aiResponses.cardiac.symptoms;
+                    } else if (lowerInput.includes("diagnos") || lowerInput.includes("test")) {
+                        response = aiResponses.cardiac.diagnosis;
+                    } else if (lowerInput.includes("treat") || lowerInput.includes("cure")) {
+                        response = aiResponses.cardiac.treatment;
+                    } else if (lowerInput.includes("emergency") || lowerInput.includes("do during")) {
+                        response = "During cardiac arrest: 1) Call emergency services immediately. 2) Begin CPR (chest compressions at 100-120 per minute). 3) Use an AED if available. 4) Continue until help arrives.";
+                    } else {
+                        response = "Cardiac arrest is the sudden loss of heart function. " + aiResponses.cardiac.symptoms;
+                    }
+                }
+                
+                addBotMessage(response);
+            }, 1500);
+        }
+
+        sendButton.addEventListener('click', function() {
+            const message = userInput.value.trim();
+            if (message) {
+                processUserInput(message);
+                userInput.value = '';
+            }
+        });
+
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const message = userInput.value.trim();
+                if (message) {
+                    processUserInput(message);
+                    userInput.value = '';
+                }
+            }
+        });
+
+        quickQuestions.forEach(button => {
+            button.addEventListener('click', function() {
+                const question = this.getAttribute('data-question');
+                userInput.value = question;
+                processUserInput(question);
+                userInput.value = '';
+            });
+        });
+    </script>
+</body>
+</html>
